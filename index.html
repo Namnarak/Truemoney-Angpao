@@ -1,0 +1,1136 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TrueMoney Angpao API — Powered by Cytech Team</title>
+    <style>
+        /* ===== RESET & BASE ===== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Sarabun', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #fef9f0;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 16px;
+            background-image: radial-gradient(circle at 10% 20%, rgba(255, 200, 100, 0.08) 0%, transparent 50%),
+                              radial-gradient(circle at 90% 80%, rgba(255, 150, 50, 0.06) 0%, transparent 50%);
+        }
+
+        .card {
+            max-width: 900px;
+            width: 100%;
+            background: #ffffff;
+            border-radius: 32px;
+            padding: 40px 36px;
+            box-shadow: 0 20px 60px rgba(200, 150, 80, 0.15), 0 4px 16px rgba(0, 0, 0, 0.04);
+            border: 1px solid rgba(255, 200, 120, 0.2);
+            transition: transform 0.2s ease;
+            overflow: hidden;
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+        }
+
+        /* ===== BADGES ===== */
+        .badge-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-bottom: 18px;
+        }
+
+        .badge {
+            display: inline-block;
+            font-size: 0.6rem;
+            font-weight: 600;
+            padding: 3px 12px;
+            border-radius: 20px;
+            letter-spacing: 0.03em;
+            text-transform: uppercase;
+            white-space: nowrap;
+        }
+
+        .badge-green {
+            background: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .badge-blue {
+            background: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .badge-yellow {
+            background: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .badge-purple {
+            background: #ede9fe;
+            color: #5b21b6;
+            border: 1px solid #ddd6fe;
+        }
+
+        .badge-orange {
+            background: #ffedd5;
+            color: #9a3412;
+            border: 1px solid #fed7aa;
+        }
+
+        .badge-red {
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        /* ===== GREETING ===== */
+        .greeting {
+            font-size: 2.2rem;
+            font-weight: 600;
+            color: #2d1f0c;
+            letter-spacing: -0.02em;
+            line-height: 1.2;
+            margin-bottom: 4px;
+            word-break: break-word;
+        }
+
+        .greeting span {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .sub-greeting {
+            font-size: 1rem;
+            color: #7a6a5a;
+            margin-top: 4px;
+            margin-bottom: 24px;
+            border-left: 3px solid #fbbf24;
+            padding-left: 14px;
+            background: #fefaf3;
+            border-radius: 0 8px 8px 0;
+            padding: 8px 14px;
+            word-break: break-word;
+        }
+
+        .sub-greeting strong {
+            color: #b45309;
+            font-weight: 600;
+        }
+
+        .divider {
+            height: 2px;
+            background: linear-gradient(to right, #fde68a, transparent);
+            margin: 24px 0;
+        }
+
+        .divider-full {
+            height: 1px;
+            background: #f0e8dc;
+            margin: 24px 0;
+        }
+
+        /* ===== SECTION HEADERS ===== */
+        .section-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #2d1f0c;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+            word-break: break-word;
+        }
+
+        .section-title small {
+            font-weight: 400;
+            font-size: 0.75rem;
+            color: #9a8a7a;
+        }
+
+        /* ===== ENDPOINT BOX — FIXED ===== */
+        .endpoint-box {
+            background: #1e1a16;
+            color: #f5ede4;
+            border-radius: 14px;
+            padding: 12px 16px;
+            font-family: 'JetBrains Mono', 'Fira Code', monospace;
+            font-size: 0.82rem;
+            letter-spacing: 0.01em;
+            margin: 8px 0 14px 0;
+            border: 1px solid #3a322a;
+            box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            flex-wrap: wrap;
+            overflow: hidden;
+        }
+
+        .endpoint-box .method {
+            color: #6ee7b7;
+            font-weight: 600;
+            flex-shrink: 0;
+        }
+
+        .endpoint-box .url {
+            color: #d4c8b8;
+            word-break: break-all;
+            overflow-wrap: break-word;
+        }
+
+        .endpoint-box .highlight {
+            color: #fbbf24;
+            word-break: break-all;
+        }
+
+        .endpoint-box .endpoint-text {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 2px;
+            flex: 1;
+            min-width: 100px;
+        }
+
+        .copy-btn {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: #d4c8b8;
+            padding: 3px 12px;
+            border-radius: 6px;
+            font-size: 0.65rem;
+            cursor: pointer;
+            font-family: inherit;
+            transition: all 0.2s;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        .copy-btn:hover {
+            background: rgba(255, 255, 255, 0.18);
+            color: #fff;
+        }
+
+        .copy-btn.copied {
+            background: rgba(110, 231, 183, 0.2);
+            border-color: #6ee7b7;
+            color: #6ee7b7;
+        }
+
+        /* ===== PARAM GRID ===== */
+        .param-grid {
+            display: grid;
+            grid-template-columns: 100px 1fr;
+            gap: 4px 16px;
+            background: #faf6f0;
+            border-radius: 14px;
+            padding: 14px 18px;
+            margin: 8px 0 14px 0;
+            border: 1px solid #f0e8dc;
+            overflow: hidden;
+        }
+
+        .param-grid .label {
+            font-weight: 600;
+            color: #5a4a3a;
+            font-size: 0.85rem;
+        }
+
+        .param-grid .desc {
+            color: #3a2a1a;
+            font-size: 0.85rem;
+            word-break: break-word;
+        }
+
+        .param-grid .desc code {
+            background: #ede8e0;
+            padding: 1px 6px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            color: #b45309;
+            word-break: break-all;
+        }
+
+        /* ===== POST BODY ===== */
+        .post-body-box {
+            background: #f0f7f0;
+            border-radius: 14px;
+            padding: 14px 18px;
+            margin: 8px 0 14px 0;
+            border: 1px solid #dce8dc;
+            font-family: 'JetBrains Mono', 'Fira Code', monospace;
+            font-size: 0.78rem;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            word-break: break-all;
+            color: #1a3a1a;
+            line-height: 1.6;
+        }
+
+        .post-body-box .key {
+            color: #b45309;
+        }
+
+        .post-body-box .val {
+            color: #0a6a3a;
+        }
+
+        .post-body-box .comment {
+            color: #7a8a7a;
+        }
+
+        /* ===== CODE BLOCK ===== */
+        .code-block {
+            background: #1e1a16;
+            color: #e8e0d8;
+            border-radius: 14px;
+            padding: 14px 18px;
+            font-family: 'JetBrains Mono', 'Fira Code', monospace;
+            font-size: 0.78rem;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            word-break: break-all;
+            border: 1px solid #3a322a;
+            box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.2);
+            line-height: 1.7;
+            margin: 6px 0 14px 0;
+        }
+
+        .code-block .comment {
+            color: #7a8a7a;
+        }
+
+        .code-block .string {
+            color: #fbbf24;
+        }
+
+        .code-block .cmd {
+            color: #6ee7b7;
+        }
+
+        .code-block .keyword {
+            color: #f472b6;
+        }
+
+        /* ===== RESPONSE PREVIEW ===== */
+        .response-preview {
+            background: #f0f7f0;
+            border-radius: 14px;
+            padding: 14px 18px;
+            margin: 6px 0 14px 0;
+            border: 1px solid #dce8dc;
+            font-family: 'JetBrains Mono', 'Fira Code', monospace;
+            font-size: 0.74rem;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            word-break: break-all;
+            color: #1a3a1a;
+            line-height: 1.6;
+        }
+
+        .response-preview .key {
+            color: #b45309;
+        }
+
+        .response-preview .val {
+            color: #0a6a3a;
+        }
+
+        .response-preview .null {
+            color: #9a8a7a;
+        }
+
+        /* ===== HEADERS BOX ===== */
+        .headers-box {
+            background: #faf6f0;
+            border-radius: 14px;
+            padding: 12px 18px;
+            margin: 6px 0 14px 0;
+            border: 1px solid #f0e8dc;
+            font-family: 'JetBrains Mono', 'Fira Code', monospace;
+            font-size: 0.78rem;
+            line-height: 1.8;
+            color: #3a2a1a;
+            overflow-x: auto;
+            word-break: break-all;
+        }
+
+        .headers-box .hkey {
+            color: #b45309;
+        }
+
+        .headers-box .hval {
+            color: #0a6a3a;
+        }
+
+        .headers-box .hcomment {
+            color: #8a7a6a;
+            font-size: 0.7rem;
+        }
+
+        /* ===== ERROR TABLE ===== */
+        .error-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.8rem;
+            background: #faf6f0;
+            border-radius: 14px;
+            overflow: hidden;
+            border: 1px solid #f0e8dc;
+            margin: 6px 0 14px 0;
+            display: table;
+        }
+
+        .error-table th {
+            background: #f0e8dc;
+            color: #3a2a1a;
+            font-weight: 600;
+            text-align: left;
+            padding: 8px 14px;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+
+        .error-table td {
+            padding: 6px 14px;
+            border-top: 1px solid #ede8e0;
+            color: #4a3a2a;
+            word-break: break-word;
+        }
+
+        .error-table .code-col {
+            font-weight: 600;
+            color: #b45309;
+            white-space: nowrap;
+        }
+
+        .error-table .err-col {
+            font-family: 'JetBrains Mono', 'Fira Code', monospace;
+            font-size: 0.7rem;
+            color: #7a5a3a;
+            white-space: nowrap;
+        }
+
+        /* ===== STATUS SUMMARY ===== */
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            gap: 4px 12px;
+            background: #faf6f0;
+            border-radius: 14px;
+            padding: 12px 18px;
+            border: 1px solid #f0e8dc;
+            margin: 6px 0 14px 0;
+            font-size: 0.82rem;
+            color: #4a3a2a;
+        }
+
+        .status-grid .scode {
+            font-weight: 600;
+            color: #b45309;
+        }
+
+        /* ===== TEXT UTILITY ===== */
+        .text-sm {
+            font-size: 0.85rem;
+            color: #4a3a2a;
+            line-height: 1.7;
+            word-break: break-word;
+        }
+
+        .text-muted {
+            color: #6a5a4a;
+            font-size: 0.82rem;
+            word-break: break-word;
+        }
+
+        .inline-code {
+            background: #ede8e0;
+            padding: 1px 6px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            color: #b45309;
+            word-break: break-all;
+        }
+
+        /* ============================================================ */
+        /*  RESPONSIVE                                                   */
+        /* ============================================================ */
+
+        @media (max-width: 768px) {
+            .card {
+                padding: 28px 18px;
+            }
+
+            .greeting {
+                font-size: 1.8rem;
+            }
+
+            .endpoint-box {
+                font-size: 0.7rem;
+                padding: 10px 12px;
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .endpoint-box .endpoint-text {
+                min-width: auto;
+                gap: 1px;
+            }
+
+            .param-grid {
+                grid-template-columns: 1fr;
+                gap: 0;
+                padding: 12px 14px;
+            }
+
+            .param-grid .label {
+                margin-top: 4px;
+            }
+
+            .error-table {
+                font-size: 0.7rem;
+            }
+
+            .error-table th,
+            .error-table td {
+                padding: 4px 10px;
+            }
+
+            .error-table .err-col {
+                white-space: normal;
+                word-break: break-all;
+            }
+
+            .badge-row {
+                gap: 4px;
+            }
+
+            .badge {
+                font-size: 0.5rem;
+                padding: 2px 8px;
+            }
+
+            .code-block {
+                font-size: 0.68rem;
+                padding: 10px 12px;
+            }
+
+            .response-preview {
+                font-size: 0.66rem;
+                padding: 10px 12px;
+            }
+
+            .post-body-box {
+                font-size: 0.66rem;
+                padding: 10px 12px;
+            }
+
+            .headers-box {
+                font-size: 0.7rem;
+                padding: 10px 12px;
+            }
+
+            .section-title {
+                font-size: 1rem;
+            }
+
+            .status-grid {
+                grid-template-columns: 1fr 1fr;
+                font-size: 0.72rem;
+                padding: 10px 12px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .card {
+                padding: 16px 10px;
+                border-radius: 20px;
+            }
+
+            .greeting {
+                font-size: 1.4rem;
+            }
+
+            .sub-greeting {
+                font-size: 0.8rem;
+                padding: 6px 10px;
+            }
+
+            .endpoint-box {
+                font-size: 0.58rem;
+                padding: 8px 10px;
+                gap: 6px;
+            }
+
+            .endpoint-box .endpoint-text {
+                gap: 1px;
+            }
+
+            .copy-btn {
+                font-size: 0.55rem;
+                padding: 2px 8px;
+            }
+
+            .error-table {
+                font-size: 0.58rem;
+            }
+
+            .error-table th,
+            .error-table td {
+                padding: 3px 6px;
+            }
+
+            .error-table .err-col {
+                font-size: 0.55rem;
+            }
+
+            .badge {
+                font-size: 0.45rem;
+                padding: 1px 6px;
+            }
+
+            .code-block {
+                font-size: 0.58rem;
+                padding: 8px 10px;
+            }
+
+            .response-preview {
+                font-size: 0.58rem;
+                padding: 8px 10px;
+            }
+
+            .post-body-box {
+                font-size: 0.58rem;
+                padding: 8px 10px;
+            }
+
+            .headers-box {
+                font-size: 0.6rem;
+                padding: 8px 10px;
+                line-height: 1.6;
+            }
+
+            .param-grid {
+                padding: 10px 12px;
+            }
+
+            .param-grid .desc {
+                font-size: 0.78rem;
+            }
+
+            .status-grid {
+                grid-template-columns: 1fr;
+                font-size: 0.68rem;
+                padding: 8px 12px;
+            }
+
+            .section-title {
+                font-size: 0.9rem;
+            }
+
+            .divider,
+            .divider-full {
+                margin: 16px 0;
+            }
+        }
+
+        @media (max-width: 360px) {
+            .card {
+                padding: 12px 6px;
+                border-radius: 16px;
+            }
+
+            .greeting {
+                font-size: 1.2rem;
+            }
+
+            .endpoint-box {
+                font-size: 0.5rem;
+                padding: 6px 8px;
+                border-radius: 10px;
+            }
+
+            .endpoint-box .endpoint-text {
+                gap: 0px;
+            }
+
+            .copy-btn {
+                font-size: 0.45rem;
+                padding: 1px 6px;
+            }
+
+            .error-table {
+                font-size: 0.5rem;
+            }
+
+            .error-table th,
+            .error-table td {
+                padding: 2px 4px;
+            }
+
+            .code-block {
+                font-size: 0.5rem;
+                padding: 6px 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="card">
+
+        <!-- ============================================================ -->
+        <!--  BADGES                                                       -->
+        <!-- ============================================================ -->
+        <div class="badge-row">
+            <span class="badge badge-green">GET</span>
+            <span class="badge badge-blue">POST</span>
+            <span class="badge badge-yellow">JSON</span>
+            <span class="badge badge-purple">Cloudflare Pages</span>
+            <span class="badge badge-orange">⚡ ใช้งานฟรี</span>
+            <span class="badge badge-red">v1.0.0</span>
+        </div>
+
+        <!-- ============================================================ -->
+        <!--  GREETING                                                     -->
+        <!-- ============================================================ -->
+        <div class="greeting">
+            สวัสดีค่าาา <span>✦</span>
+        </div>
+        <div class="sub-greeting">
+            <strong>ผู้บริการ API p.namnarak</strong> &nbsp;— ยินดีต้อนรับสู่ TrueMoney Angpao Gateway ค่ะ
+        </div>
+
+        <div class="divider"></div>
+
+        <!-- ============================================================ -->
+        <!--  WHAT IT DOES                                                 -->
+        <!-- ============================================================ -->
+        <div class="section-title">
+            📬 รับเงินจากลิงค์ซอง
+            <small>— ใช้ได้เลย ไม่ต้องล็อกอิน</small>
+        </div>
+
+        <p class="text-sm" style="margin-bottom:16px;">
+            API นี้ช่วยให้คุณรับเงินจากลิงค์ซองของขวัญ TrueMoney ได้โดยตรง
+            แค่ส่ง <strong>ลิงค์ซอง</strong> และ <strong>เบอร์โทร</strong> ของคุณ
+            ระบบจะเคลมให้แบบเรียลไทม์เลยค่ะ
+        </p>
+
+        <!-- ============================================================ -->
+        <!--  SECTION 1: GET METHOD — FIXED DISPLAY                       -->
+        <!-- ============================================================ -->
+
+        <div class="section-title" style="margin-top:24px;">
+            🔹 GET &nbsp;<span style="font-size:0.7rem; font-weight:400; color:#7a6a5a;">— เรียกผ่าน URL โดยตรง</span>
+        </div>
+
+        <div style="display:flex; align-items:center; gap:10px; margin-bottom:4px; flex-wrap:wrap;">
+            <span style="font-weight:600; color:#2d1f0c; font-size:0.85rem;">🔗 Endpoint</span>
+            <span class="badge badge-green">GET</span>
+        </div>
+
+        <div class="endpoint-box" id="get-endpoint">
+            <span class="endpoint-text">
+                <span class="method">GET</span>
+                <span class="url">https://tmn-angpao.pages.dev/api/</span>
+                <span class="highlight">{phone}</span>
+                <span class="url">/</span>
+                <span class="highlight">{voucher_id}</span>
+            </span>
+            <button class="copy-btn" onclick="copyEndpoint('get-endpoint')">📋 คัดลอก</button>
+        </div>
+
+        <!-- ===== GET PARAMETERS ===== -->
+        <div style="font-weight:600; color:#2d1f0c; font-size:0.85rem; margin-bottom:4px;">📋 พารามิเตอร์ (GET)</div>
+        <div class="param-grid">
+            <div class="label">phone</div>
+            <div class="desc">
+                เบอร์โทรศัพท์ <strong>10 หลัก</strong> ของผู้รับเงิน
+                <br /><span style="font-size:0.7rem; color:#8a7a6a;">เช่น <code>0812345678</code></span>
+            </div>
+            <div class="label">voucher_id</div>
+            <div class="desc">
+                ลิงค์ซองของขวัญ <strong>เฉพาะส่วนหลัง</strong> <code>?v=</code>
+                <br /><span style="font-size:0.7rem; color:#8a7a6a;">เช่น <code>abc123xyz</code> จาก <code>https://gift.truemoney.com/campaign/?v=abc123xyz</code></span>
+            </div>
+        </div>
+
+        <!-- ===== GET EXAMPLE ===== -->
+        <div style="margin-top:2px;">
+            <div style="font-size:0.75rem; font-weight:600; color:#8a7a6a; text-transform:uppercase; letter-spacing:0.04em; margin-bottom:4px;">📌 ตัวอย่าง (GET)</div>
+            <div class="code-block">
+<span class="comment"># ใช้ curl</span>
+curl <span class="string">"https://tmn-angpao.pages.dev/api/0812345678/abc123xyz"</span>
+
+<span class="comment"># หรือเปิดในเบราว์เซอร์</span>
+https://tmn-angpao.pages.dev/api/0812345678/abc123xyz
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!--  SECTION 2: POST METHOD                                       -->
+        <!-- ============================================================ -->
+
+        <div class="section-title" style="margin-top:28px;">
+            🔸 POST &nbsp;<span style="font-size:0.7rem; font-weight:400; color:#7a6a5a;">— ส่งเป็น JSON ใน Body</span>
+        </div>
+
+        <div style="display:flex; align-items:center; gap:10px; margin-bottom:4px; flex-wrap:wrap;">
+            <span style="font-weight:600; color:#2d1f0c; font-size:0.85rem;">🔗 Endpoint</span>
+            <span class="badge badge-blue">POST</span>
+        </div>
+
+        <div class="endpoint-box" id="post-endpoint">
+            <span class="endpoint-text">
+                <span class="method">POST</span>
+                <span class="url">https://tmn-angpao.pages.dev/api</span>
+            </span>
+            <button class="copy-btn" onclick="copyEndpoint('post-endpoint')">📋 คัดลอก</button>
+        </div>
+
+        <!-- ===== REQUEST HEADERS ===== -->
+        <div style="font-weight:600; color:#2d1f0c; font-size:0.85rem; margin-bottom:4px;">📋 Request Headers (POST)</div>
+        <div class="headers-box">
+            <span class="hkey">Content-Type</span>: <span class="hval">application/json</span> &nbsp;<span class="hcomment">← จำเป็น</span><br />
+            <span class="hkey">Accept</span>: <span class="hval">application/json</span> &nbsp;<span class="hcomment">← แนะนำ</span>
+        </div>
+
+        <!-- ===== REQUEST BODY ===== -->
+        <div style="font-weight:600; color:#2d1f0c; font-size:0.85rem; margin-bottom:4px;">📦 Request Body (JSON)</div>
+        <div class="post-body-box">
+<span class="comment">// Content-Type: application/json</span>
+{
+  <span class="key">"phone"</span>: <span class="val">"0812345678"</span>,
+  <span class="key">"voucher_id"</span>: <span class="val">"abc123xyz"</span>
+}
+        </div>
+
+        <!-- ===== POST EXAMPLE ===== -->
+        <div style="margin-top:2px;">
+            <div style="font-size:0.75rem; font-weight:600; color:#8a7a6a; text-transform:uppercase; letter-spacing:0.04em; margin-bottom:4px;">📌 ตัวอย่าง (POST)</div>
+            <div class="code-block">
+<span class="comment"># ใช้ curl</span>
+curl -X POST <span class="string">"https://tmn-angpao.pages.dev/api"</span> \
+  -H <span class="string">"Content-Type: application/json"</span> \
+  -H <span class="string">"Accept: application/json"</span> \
+  -d <span class="string">'{"phone":"0812345678","voucher_id":"abc123xyz"}'</span>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!--  SECTION 3: RESPONSE HEADERS                                  -->
+        <!-- ============================================================ -->
+
+        <div class="section-title" style="margin-top:28px;">
+            📤 Response Headers
+        </div>
+
+        <div class="headers-box">
+            <span class="hkey">Content-Type</span>: <span class="hval">application/json; charset=utf-8</span><br />
+            <span class="hkey">Cache-Control</span>: <span class="hval">no-store, no-cache, must-revalidate</span><br />
+            <span class="hkey">X-Request-ID</span>: <span class="hval">a1b2c3d4e5f6</span> &nbsp;<span class="hcomment">← ใช้อ้างอิงตอนแจ้งปัญหา</span><br />
+            <span class="hkey">Retry-After</span>: <span class="hval">30</span> &nbsp;<span class="hcomment">← เฉพาะเมื่อ status = 429</span>
+        </div>
+
+        <p class="text-muted" style="margin-top:-6px; margin-bottom:10px;">
+            💡 ทุก Response จะมี <code class="inline-code">X-Request-ID</code> สำหรับใช้ในการแจ้งปัญหาหรืออ้างอิง Log
+        </p>
+
+        <!-- ============================================================ -->
+        <!--  SECTION 4: RESPONSE EXAMPLES                                 -->
+        <!-- ============================================================ -->
+
+        <div class="section-title" style="margin-top:24px;">
+            📤 ตัวอย่าง Response
+        </div>
+
+        <!-- ===== SUCCESS ===== -->
+        <div style="font-weight:600; color:#065f46; font-size:0.82rem; margin-top:6px;">✅ สำเร็จ (200)</div>
+        <div class="response-preview">
+{
+  <span class="key">"success"</span>: <span class="val">true</span>,
+  <span class="key">"status"</span>: <span class="val">200</span>,
+  <span class="key">"message"</span>: <span class="val">"รับเงินสำเร็จ"</span>,
+  <span class="key">"code"</span>: <span class="val">"SUCCESS"</span>,
+  <span class="key">"data"</span>: {
+    <span class="key">"name"</span>: <span class="val">"นาย ทดสอบ ***"</span>,
+    <span class="key">"amount"</span>: <span class="val">"10.00"</span>
+  }
+}
+        </div>
+
+        <!-- ===== RATE LIMITED ===== -->
+        <div style="font-weight:600; color:#92400e; font-size:0.82rem; margin-top:10px;">⏳ Rate Limited (429)</div>
+        <div style="font-size:0.7rem; color:#7a6a5a; margin-bottom:4px;">
+            Header: <code class="inline-code">Retry-After: 30</code>
+        </div>
+        <div class="response-preview">
+{
+  <span class="key">"success"</span>: <span class="val">false</span>,
+  <span class="key">"status"</span>: <span class="val">429</span>,
+  <span class="key">"message"</span>: <span class="val">"ยิงคำขอเร็วเกินไป กรุณารอสักครู่"</span>,
+  <span class="key">"code"</span>: <span class="val">"RATE_LIMITED"</span>,
+  <span class="key">"data"</span>: <span class="null">null</span>
+}
+        </div>
+
+        <!-- ===== ERROR ===== -->
+        <div style="font-weight:600; color:#b45309; font-size:0.82rem; margin-top:10px;">❌ ตัวอย่าง Error (400)</div>
+        <div class="response-preview">
+{
+  <span class="key">"success"</span>: <span class="val">false</span>,
+  <span class="key">"status"</span>: <span class="val">400</span>,
+  <span class="key">"message"</span>: <span class="val">"ลิงค์ซองของขวัญหมดอายุ"</span>,
+  <span class="key">"code"</span>: <span class="val">"VOUCHER_EXPIRED"</span>,
+  <span class="key">"data"</span>: <span class="null">null</span>
+}
+        </div>
+
+        <!-- ============================================================ -->
+        <!--  SECTION 5: HTTP STATUS SUMMARY                               -->
+        <!-- ============================================================ -->
+
+        <div class="section-title" style="margin-top:28px;">
+            📊 HTTP Status Summary
+        </div>
+
+        <div class="status-grid">
+            <div><span class="scode">200</span> — Success ✅</div>
+            <div><span class="scode">400</span> — Bad Request</div>
+            <div><span class="scode">404</span> — Not Found</div>
+            <div><span class="scode">405</span> — Method Not Allowed</div>
+            <div><span class="scode">415</span> — Unsupported Media Type</div>
+            <div><span class="scode">429</span> — Too Many Requests</div>
+            <div><span class="scode">500</span> — Internal Server Error</div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!--  SECTION 6: ERROR CODES TABLE (FULL)                          -->
+        <!-- ============================================================ -->
+
+        <div class="section-title" style="margin-top:24px;">
+            ⚠️ ตาราง Error Codes
+        </div>
+
+        <table class="error-table">
+            <thead>
+                <tr>
+                    <th>HTTP Status</th>
+                    <th>Code</th>
+                    <th>ข้อความ</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="code-col">200</td>
+                    <td class="err-col">SUCCESS</td>
+                    <td>รับเงินสำเร็จ ✅</td>
+                </tr>
+                <tr>
+                    <td class="code-col">400</td>
+                    <td class="err-col">VOUCHER_EXPIRED</td>
+                    <td>ลิงค์ซองของขวัญหมดอายุ</td>
+                </tr>
+                <tr>
+                    <td class="code-col">400</td>
+                    <td class="err-col">VOUCHER_ALREADY_USED</td>
+                    <td>ลิงค์ซองของขวัญถูกใช้งานแล้ว</td>
+                </tr>
+                <tr>
+                    <td class="code-col">400</td>
+                    <td class="err-col">SELF_CLAIM_NOT_ALLOWED</td>
+                    <td>ไม่สามารถใช้อั่งเปาของตัวเองได้</td>
+                </tr>
+                <tr>
+                    <td class="code-col">400</td>
+                    <td class="err-col">INVALID_PHONE_OR_USED</td>
+                    <td>เบอร์รับเงินนี้ไม่ถูกต้อง หรือรับเงินไปแล้ว</td>
+                </tr>
+                <tr>
+                    <td class="code-col">400</td>
+                    <td class="err-col">INVALID_PHONE</td>
+                    <td>เบอร์รับเงินไม่ถูกต้อง (ต้อง 10 หลัก ขึ้นต้นด้วย 0)</td>
+                </tr>
+                <tr>
+                    <td class="code-col">400</td>
+                    <td class="err-col">INVALID_VOUCHER</td>
+                    <td>กรุณาระบุลิงค์ซองของขวัญ</td>
+                </tr>
+                <tr>
+                    <td class="code-col">400</td>
+                    <td class="err-col">MISSING_PARAMETER</td>
+                    <td>กรุณาระบุ phone และ voucher_id</td>
+                </tr>
+                <tr>
+                    <td class="code-col">400</td>
+                    <td class="err-col">INVALID_PATH</td>
+                    <td>รูปแบบ URL ไม่ถูกต้อง ใช้ /api/{phone}/{voucher_id}</td>
+                </tr>
+                <tr>
+                    <td class="code-col">400</td>
+                    <td class="err-col">INVALID_JSON</td>
+                    <td>JSON payload ไม่ถูกต้อง</td>
+                </tr>
+                <tr>
+                    <td class="code-col">404</td>
+                    <td class="err-col">VOUCHER_NOT_FOUND</td>
+                    <td>ไม่พบลิงค์ซองของขวัญ</td>
+                </tr>
+                <tr>
+                    <td class="code-col">405</td>
+                    <td class="err-col">METHOD_NOT_ALLOWED</td>
+                    <td>Method Not Allowed (ใช้ GET หรือ POST เท่านั้น)</td>
+                </tr>
+                <tr>
+                    <td class="code-col">415</td>
+                    <td class="err-col">UNSUPPORTED_MEDIA_TYPE</td>
+                    <td>Content-Type ต้องเป็น application/json (สำหรับ POST)</td>
+                </tr>
+                <tr>
+                    <td class="code-col">429</td>
+                    <td class="err-col">RATE_LIMITED</td>
+                    <td>ยิงคำขอเร็วเกินไป กรุณารอสักครู่ (Retry-After: 30)</td>
+                </tr>
+                <tr>
+                    <td class="code-col">500</td>
+                    <td class="err-col">INTERNAL_SERVER_ERROR</td>
+                    <td>เกิดข้อผิดพลาดภายในเซิร์ฟเวอร์</td>
+                </tr>
+                <tr>
+                    <td class="code-col">500</td>
+                    <td class="err-col">EXTERNAL_SERVER_ERROR</td>
+                    <td>เซิร์ฟเวอร์ภายนอกขัดข้อง กรุณาลองใหม่ภายหลัง</td>
+                </tr>
+                <tr>
+                    <td class="code-col">500</td>
+                    <td class="err-col">EXTERNAL_INVALID_RESPONSE</td>
+                    <td>เซิร์ฟเวอร์ภายนอกตอบกลับมาไม่ถูกต้อง</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <!-- ============================================================ -->
+        <!--  SECTION 7: FOOTER                                            -->
+        <!-- ============================================================ -->
+
+        <div class="divider-full" style="margin-top:28px;"></div>
+
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+            <div style="font-size:0.8rem; color:#9a8a7a; word-break:break-word;">
+                ✦ <strong style="color:#b45309;">Powered by Cytech Team</strong>
+                <span style="color:#c0b0a0; margin-left:10px;">|</span>
+                <span style="color:#b0a090; margin-left:10px; font-size:0.7rem;">Version 1.0.0</span>
+            </div>
+            <div style="display:flex; gap:12px; font-size:0.75rem; color:#b0a090; flex-wrap:wrap;">
+                <span>⚡ ใช้งานฟรี</span>
+                <span>·</span>
+                <span>📦 ไม่มีล็อกอิน</span>
+                <span>·</span>
+                <span>🛡️ 30 req/min</span>
+                <span>·</span>
+                <span>📅 2026</span>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ============================================================ -->
+    <!--  SCRIPT: COPY BUTTON — FULLY WORKING                         -->
+    <!-- ============================================================ -->
+    <script>
+        function copyEndpoint(elementId) {
+            const container = document.getElementById(elementId);
+            if (!container) return;
+
+            const textWrapper = container.querySelector('.endpoint-text');
+            if (!textWrapper) {
+                const fallback = container.textContent.replace('📋 คัดลอก', '').trim().replace(/\s+/g, ' ');
+                copyText(fallback, container);
+                return;
+            }
+
+            let urlText = '';
+            for (const child of textWrapper.childNodes) {
+                if (child.nodeType === Node.TEXT_NODE) {
+                    urlText += child.textContent;
+                } else if (child.nodeType === Node.ELEMENT_NODE) {
+                    if (child.classList && child.classList.contains('method')) {
+                        continue;
+                    }
+                    urlText += child.textContent;
+                }
+            }
+
+            urlText = urlText.replace(/^\s*(GET|POST)\s*/, '').trim();
+            urlText = urlText.replace(/\s+/g, ' ').trim();
+
+            if (!urlText || urlText.length === 0) {
+                const fallback = container.textContent.replace('📋 คัดลอก', '').trim();
+                urlText = fallback.replace(/^(GET|POST)\s*/, '').trim();
+            }
+
+            copyText(urlText, container);
+        }
+
+        function copyText(text, container) {
+            if (!text || text.length === 0) {
+                alert('ไม่พบข้อความที่จะคัดลอก');
+                return;
+            }
+
+            navigator.clipboard.writeText(text).then(() => {
+                showCopied(container);
+            }).catch(() => {
+                try {
+                    const textarea = document.createElement('textarea');
+                    textarea.value = text;
+                    textarea.style.position = 'fixed';
+                    textarea.style.opacity = '0';
+                    textarea.style.pointerEvents = 'none';
+                    textarea.style.width = '1px';
+                    textarea.style.height = '1px';
+                    document.body.appendChild(textarea);
+                    textarea.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(textarea);
+                    showCopied(container);
+                } catch (_) {
+                    alert('ไม่สามารถคัดลอกได้ กรุณาคัดลอกเอง:\n\n' + text);
+                }
+            });
+        }
+
+        function showCopied(container) {
+            const btn = container.querySelector('.copy-btn');
+            if (!btn) return;
+            const original = btn.textContent;
+            btn.textContent = '✅ คัดลอกแล้ว';
+            btn.classList.add('copied');
+            setTimeout(() => {
+                btn.textContent = original;
+                btn.classList.remove('copied');
+            }, 2000);
+        }
+    </script>
+
+</body>
+</html>
