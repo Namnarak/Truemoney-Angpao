@@ -41,8 +41,10 @@ export default {
       // --- Parse input ---
       if (method === 'GET') {
         // /api/{phone}/{voucher_id}
-        const segments = pathname.replace(/^\/api/, '').split('/').filter(s => s.length > 0);
-        if (segments.length < 2) {
+        const pathAfterApi = request.url.split('/api/')[1] || '';
+        const firstSlashIdx = pathAfterApi.indexOf('/');
+        
+        if (firstSlashIdx === -1 || firstSlashIdx === 0) {
           return jsonResponse(
             false,
             400,
@@ -52,8 +54,13 @@ export default {
             corsHeaders
           );
         }
-        phone = segments[0];
-        voucherId = decodeURIComponent(segments[1]);
+        
+        phone = pathAfterApi.substring(0, firstSlashIdx);
+        voucherId = pathAfterApi.substring(firstSlashIdx + 1);
+        
+        try {
+          voucherId = decodeURIComponent(voucherId);
+        } catch(e) {}
       } else if (method === 'POST') {
         // --- Check Content-Type before parsing ---
         const contentType = request.headers.get('Content-Type') || '';
@@ -121,60 +128,33 @@ export default {
         );
       }
 
+      // Extract voucher hash if full URL is provided
+      const vMatch = voucherId.match(/[?&]v=([^&#]+)/);
+      if (vMatch) {
+        voucherId = vMatch[1];
+      }
+
       // ================================================================
       //  CLAIM LOGIC — ติดต่อ TrueMoney โดยตรง
       // ================================================================
 
-      const giftPageUrl = `https://gift.truemoney.com/campaign/?v=${encodeURIComponent(voucherId)}`;
+      const claimUrl = `https://gift.truemoney.com/campaign/vouchers/${voucherId}/redeem`;
 
-      // --- Step 1: โหลดหน้าเพื่อดึง session / token ---
-      const pageResp = await fetch(giftPageUrl, {
-        method: 'GET',
-        headers: {
-          'User-Agent': 'Mozilla/5.0 (Linux; Android 12; POCO X3 GT) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36',
-          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-          'Accept-Language': 'th-TH,th;q=0.9,en;q=0.8',
-        },
-        redirect: 'follow',
+      const claimBody = JSON.stringify({
+        mobile: phone,
+        voucher_hash: voucherId
       });
-
-      if (pageResp.status === 404) {
-        return jsonResponse(false, 404, 'ไม่พบลิงค์ซองของขวัญ', 'VOUCHER_NOT_FOUND', null, corsHeaders);
-      }
-
-      const pageHtml = await pageResp.text();
-
-      // --- Step 2: แกะ CSRF token และ cookies ---
-      let csrfToken = '';
-      const csrfMatch = pageHtml.match(/<meta\s+name=["']csrf-token["']\s+content=["']([^"']+)["']/i);
-      if (csrfMatch) csrfToken = csrfMatch[1];
-
-      const setCookieHeader = pageResp.headers.get('set-cookie') || '';
-      const cookies = setCookieHeader
-        .split(',')
-        .map(c => c.split(';')[0].trim())
-        .join('; ');
-
-      // --- Step 3: ส่ง claim request ---
-      const claimUrl = 'https://gift.truemoney.com/campaign/api/claim';
-
-      const claimBody = new URLSearchParams();
-      claimBody.append('voucher_code', voucherId);
-      claimBody.append('mobile', phone);
-      if (csrfToken) claimBody.append('_token', csrfToken);
 
       const claimResp = await fetch(claimUrl, {
         method: 'POST',
         headers: {
           'User-Agent': 'Mozilla/5.0 (Linux; Android 12; POCO X3 GT) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36',
           'Accept': 'application/json, text/plain, */*',
-          'Content-Type': 'application/x-www-form-urlencoded',
+          'Content-Type': 'application/json',
           'Origin': 'https://gift.truemoney.com',
-          'Referer': giftPageUrl,
-          'Cookie': cookies,
-          'X-Requested-With': 'XMLHttpRequest',
+          'Referer': `https://gift.truemoney.com/campaign/?v=${voucherId}`,
         },
-        body: claimBody.toString(),
+        body: claimBody,
         redirect: 'follow',
       });
 
@@ -198,34 +178,44 @@ export default {
       const isSuccess = (
         claimData.status === 'success' ||
         claimData.success === true ||
-        claimData.data?.status === 'success'
+        claimData.data?.status === 'success' ||
+        claimData.status?.code === 'SUCCESS'
       );
 
       if (isSuccess) {
         return jsonResponse(true, 200, 'รับเงินสำเร็จ', 'SUCCESS', {
-          name: claimData.sender_name || claimData.data?.name || 'ไม่ระบุชื่อ',
-          amount: claimData.amount || claimData.data?.amount || '0.00'
+          name: claimData.sender_name || claimData.data?.name || claimData.data?.owner_profile?.full_name || claimData.data?.voucher_owner_profile?.full_name || 'ไม่ระบุชื่อ',
+          amount: claimData.amount || claimData.data?.amount || claimData.data?.my_ticket?.amount_baht || '0.00'
         }, corsHeaders);
       }
 
       // --- Step 6: จัดการ error ตามประเภท ---
-      const errorMsg = claimData.message || claimData.error || 'ไม่สามารถรับเงินได้';
+      const rawCode = claimData.status?.code || claimData.code || '';
+      const errorMsg = claimData.status?.message || claimData.message || claimData.error || 'ไม่สามารถรับเงินได้';
       let statusCode = 400;
       let finalMessage = errorMsg;
-      let errorCode = 'CLAIM_FAILED';
+      let errorCode = rawCode || 'CLAIM_FAILED';
 
-      if (errorMsg.includes('หมดอายุ') || errorMsg.includes('expired')) {
+      if (rawCode === 'VOUCHER_EXPIRED' || errorMsg.includes('หมดอายุ') || errorMsg.includes('expired')) {
         statusCode = 400;
         finalMessage = 'ลิงค์ซองของขวัญหมดอายุ';
         errorCode = 'VOUCHER_EXPIRED';
-      } else if (errorMsg.includes('ถูกใช้งานแล้ว') || errorMsg.includes('already')) {
+      } else if (rawCode === 'VOUCHER_OUT_OF_STOCK' || errorMsg.includes('ถูกใช้งานแล้ว') || errorMsg.includes('already')) {
         statusCode = 400;
-        finalMessage = 'ลิงค์ซองของขวัญถูกใช้งานแล้ว';
+        finalMessage = 'ลิงค์ซองของขวัญถูกใช้งานแล้วทั้งหมด';
         errorCode = 'VOUCHER_ALREADY_USED';
-      } else if (errorMsg.includes('ตัวเอง') || errorMsg.includes('self')) {
+      } else if (rawCode === 'TARGET_USER_REDEEMED' || errorMsg.includes('redeeming') || errorMsg.includes('redeemed')) {
         statusCode = 400;
-        finalMessage = 'ไม่สามารถใช้อั่งเปาของตัวเองได้';
+        finalMessage = 'คุณรับเงินจากซองนี้ไปแล้ว';
+        errorCode = 'TARGET_USER_REDEEMED';
+      } else if (rawCode === 'TARGET_USER_NOT_FOUND' || errorMsg.includes('ตัวเอง') || errorMsg.includes('self')) {
+        statusCode = 400;
+        finalMessage = 'ไม่สามารถใช้อั่งเปาของตัวเองได้ หรือไม่พบผู้ใช้';
         errorCode = 'SELF_CLAIM_NOT_ALLOWED';
+      } else if (rawCode === 'VOUCHER_NOT_FOUND' || errorMsg.includes('exist') || claimResp.status === 404) {
+        statusCode = 404;
+        finalMessage = 'ไม่พบลิงค์ซองของขวัญ';
+        errorCode = 'VOUCHER_NOT_FOUND';
       } else if (errorMsg.includes('เบอร์') || errorMsg.includes('mobile')) {
         statusCode = 400;
         finalMessage = 'เบอร์รับเงินนี้ไม่ถูกต้อง หรือรับเงินไปแล้ว';
@@ -234,10 +224,6 @@ export default {
         statusCode = 429;
         finalMessage = 'ยิงคำขอเร็วเกินไป กรุณารอสักครู่';
         errorCode = 'RATE_LIMITED';
-      } else if (claimResp.status === 404) {
-        statusCode = 404;
-        finalMessage = 'ไม่พบลิงค์ซองของขวัญ';
-        errorCode = 'VOUCHER_NOT_FOUND';
       } else if (claimResp.status >= 500) {
         statusCode = 500;
         finalMessage = 'เซิร์ฟเวอร์ภายนอกขัดข้อง กรุณาลองใหม่ภายหลัง';
