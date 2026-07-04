@@ -1,93 +1,47 @@
-# TrueMoney Angpao Gateway API
+# TrueMoney Angpao API (v2.0.0)
 
-> ⚡ Free to use • Cloudflare Pages • REST API • Version 1.0.0
+API สำหรับรับเงินจากลิงก์ซองของขวัญ TrueMoney (อั่งเปา) ได้โดยตรง ทำงานแบบเรียลไทม์ และไม่ต้องล็อกอิน (ใช้ Cloudflare Workers เป็นตัวกลาง)
 
-TrueMoney Angpao Gateway เป็น REST API สำหรับรับเงินจากลิงก์ซองของขวัญ TrueMoney ผ่าน HTTP API โดยไม่ต้องล็อกอิน
-
-## Features
-
-* ⚡ ฟรี ไม่มีค่าใช้จ่าย
-* ☁️ Deploy บน Cloudflare Pages
-* 📦 ไม่ต้องล็อกอิน
-* 🔒 รองรับ GET และ POST
-* 📄 JSON Response
-* 🛡️ Rate Limit 30 requests/minute
-* 🆔 รองรับ `X-Request-ID`
+## คุณสมบัติ
+- **เวอร์ชัน**: 2.0.0
+- **การเชื่อมต่อ**: รองรับทั้ง `GET` และ `POST`
+- **อัตราการใช้งาน**: 30 Requests / นาที (Rate Limited)
+- **การป้อนข้อมูล**: รหัสซอง (`voucher_id`) รองรับทั้งรหัสสั้นๆ (เช่น `abc123xyz`) หรือจะส่งเป็นลิงก์เต็มมาก็ได้เลย
 
 ---
 
-# Base URL
+## 🔹 1. GET Method
+เหมาะสำหรับการเรียกใช้งานง่ายๆ ผ่าน URL โดยตรง (เช่น ทำผ่านเว็บบราวเซอร์ หรือบอท Discord)
 
-```text
-https://tmn-angpao.pages.dev/api
-```
-
----
-
-# Authentication
-
-ไม่ต้องใช้ Authentication
-
----
-
-# GET Endpoint
-
-รับเงินผ่าน URL
-
+**Endpoint:**
 ```http
-GET /api/{phone}/{voucher_id}
+GET https://tmn-angpao.pages.dev/api/{phone}/{voucher_id}
 ```
 
-### Parameters
+**พารามิเตอร์:**
+- `phone`: เบอร์โทรศัพท์ 10 หลักของผู้รับเงิน (เช่น `0812345678`)
+- `voucher_id`: รหัสซองของขวัญ หรือลิงก์เต็มก็ได้
 
-| Name         | Type   | Description                                       |
-| ------------ | ------ | ------------------------------------------------- |
-| `phone`      | string | เบอร์โทรศัพท์ผู้รับเงิน 10 หลัก เช่น `0812345678` |
-| `voucher_id` | string | รหัสซองของขวัญ (ค่าหลัง `?v=`)                    |
-
-ตัวอย่าง
-
-```
-https://gift.truemoney.com/campaign/?v=abc123xyz
-```
-
-ใช้
-
-```
-abc123xyz
-```
-
-### Example
-
+**ตัวอย่าง (GET):**
 ```bash
-curl "https://tmn-angpao.pages.dev/api/0812345678/abc123xyz"
-```
-
-หรือ
-
-```
-https://tmn-angpao.pages.dev/api/0812345678/abc123xyz
+curl -X GET "https://tmn-angpao.pages.dev/api/0812345678/abc123xyz"
 ```
 
 ---
 
-# POST Endpoint
+## 🔸 2. POST Method
+เหมาะสำหรับการเชื่อมต่อที่ปลอดภัยและเป็นระบบมากกว่า ส่งข้อมูลผ่าน JSON Body
 
-ส่งข้อมูลผ่าน JSON
-
+**Endpoint:**
 ```http
-POST /api
+POST https://tmn-angpao.pages.dev/api
 ```
 
-## Headers
+**Request Headers:**
+- `Content-Type: application/json` (จำเป็น)
+- `Accept: application/json` (แนะนำ)
 
-```http
-Content-Type: application/json
-Accept: application/json
-```
-
-## Request Body
-
+**Request Body (JSON):**
 ```json
 {
   "phone": "0812345678",
@@ -95,33 +49,18 @@ Accept: application/json
 }
 ```
 
-## Example
-
+**ตัวอย่าง (POST):**
 ```bash
 curl -X POST "https://tmn-angpao.pages.dev/api" \
   -H "Content-Type: application/json" \
-  -H "Accept: application/json" \
-  -d '{
-    "phone":"0812345678",
-    "voucher_id":"abc123xyz"
-}'
+  -d '{"phone":"0812345678","voucher_id":"abc123xyz"}'
 ```
 
 ---
 
-# Response Headers
+## 📤 ตัวอย่าง Response
 
-| Header        | Description                           |
-| ------------- | ------------------------------------- |
-| Content-Type  | `application/json; charset=utf-8`     |
-| Cache-Control | `no-store, no-cache, must-revalidate` |
-| X-Request-ID  | ใช้อ้างอิงเวลาติดต่อ Support          |
-| Retry-After   | แสดงเมื่อเกิด Rate Limit              |
-
----
-
-# Success Response
-
+**✅ สำเร็จ (200 OK)**
 ```json
 {
   "success": true,
@@ -135,38 +74,7 @@ curl -X POST "https://tmn-angpao.pages.dev/api" \
 }
 ```
 
----
-
-# Rate Limited
-
-HTTP Status
-
-```
-429 Too Many Requests
-```
-
-Header
-
-```
-Retry-After: 30
-```
-
-Response
-
-```json
-{
-  "success": false,
-  "status": 429,
-  "message": "ยิงคำขอเร็วเกินไป กรุณารอสักครู่",
-  "code": "RATE_LIMITED",
-  "data": null
-}
-```
-
----
-
-# Error Example
-
+**❌ ผิดพลาด (ตัวอย่าง 400 Bad Request)**
 ```json
 {
   "success": false,
@@ -179,79 +87,24 @@ Response
 
 ---
 
-# HTTP Status Codes
+## ⚠️ ตาราง Error Codes
 
-| Status | Description            |
-| ------ | ---------------------- |
-| 200    | Success                |
-| 400    | Bad Request            |
-| 404    | Not Found              |
-| 405    | Method Not Allowed     |
-| 415    | Unsupported Media Type |
-| 429    | Too Many Requests      |
-| 500    | Internal Server Error  |
-
----
-
-# Error Codes
-
-| HTTP | Code                      | Description                                           |
-| ---- | ------------------------- | ----------------------------------------------------- |
-| 200  | SUCCESS                   | รับเงินสำเร็จ                                         |
-| 400  | VOUCHER_EXPIRED           | ลิงก์ซองของขวัญหมดอายุ                                |
-| 400  | VOUCHER_ALREADY_USED      | ลิงก์ซองของขวัญถูกใช้งานแล้ว                          |
-| 400  | SELF_CLAIM_NOT_ALLOWED    | ไม่สามารถใช้อั่งเปาของตัวเองได้                       |
-| 400  | INVALID_PHONE_OR_USED     | เบอร์รับเงินไม่ถูกต้อง หรือรับเงินไปแล้ว              |
-| 400  | INVALID_PHONE             | เบอร์โทรไม่ถูกต้อง (ต้องมี 10 หลัก และขึ้นต้นด้วย 0)  |
-| 400  | INVALID_VOUCHER           | กรุณาระบุลิงก์ซองของขวัญ                              |
-| 400  | MISSING_PARAMETER         | กรุณาระบุ `phone` และ `voucher_id`                    |
-| 400  | INVALID_PATH              | รูปแบบ URL ไม่ถูกต้อง ใช้ `/api/{phone}/{voucher_id}` |
-| 400  | INVALID_JSON              | JSON Payload ไม่ถูกต้อง                               |
-| 404  | VOUCHER_NOT_FOUND         | ไม่พบลิงก์ซองของขวัญ                                  |
-| 405  | METHOD_NOT_ALLOWED        | รองรับเฉพาะ GET และ POST                              |
-| 415  | UNSUPPORTED_MEDIA_TYPE    | Content-Type ต้องเป็น `application/json`              |
-| 429  | RATE_LIMITED              | ส่งคำขอเร็วเกินไป กรุณารอ 30 วินาที                   |
-| 500  | INTERNAL_SERVER_ERROR     | เกิดข้อผิดพลาดภายในเซิร์ฟเวอร์                        |
-| 500  | EXTERNAL_SERVER_ERROR     | ระบบภายนอกขัดข้อง                                     |
-| 500  | EXTERNAL_INVALID_RESPONSE | ระบบภายนอกตอบกลับไม่ถูกต้อง                           |
+| HTTP Status | Code | ข้อความ |
+| :--- | :--- | :--- |
+| **200** | `SUCCESS` | รับเงินสำเร็จ ✅ |
+| **400** | `VOUCHER_EXPIRED` | ลิงค์ซองของขวัญหมดอายุ |
+| **400** | `VOUCHER_ALREADY_USED` | ลิงค์ซองของขวัญถูกใช้งานแล้ว |
+| **400** | `SELF_CLAIM_NOT_ALLOWED` | ไม่สามารถใช้อั่งเปาของตัวเองได้ |
+| **400** | `TARGET_USER_REDEEMED` | เป้าหมายรับซองไปแล้ว / หรือไม่ใช่ผู้รับที่กำหนด |
+| **400** | `INVALID_PHONE_OR_USED` | เบอร์รับเงินนี้ไม่ถูกต้อง หรือรับเงินไปแล้ว |
+| **400** | `INVALID_PHONE` | เบอร์รับเงินไม่ถูกต้อง (ต้อง 10 หลัก) |
+| **400** | `INVALID_VOUCHER` | กรุณาระบุลิงค์ซองของขวัญ |
+| **400** | `MISSING_PARAMETER` | กรุณาระบุ phone และ voucher_id |
+| **404** | `VOUCHER_NOT_FOUND` | ไม่พบลิงค์ซองของขวัญ |
+| **429** | `RATE_LIMITED` | ยิงคำขอเร็วเกินไป กรุณารอสักครู่ (Retry-After: 30) |
+| **500** | `INTERNAL_SERVER_ERROR`| เกิดข้อผิดพลาดภายในเซิร์ฟเวอร์ |
+| **500** | `EXTERNAL_SERVER_ERROR`| เซิร์ฟเวอร์ภายนอก (TrueMoney) ขัดข้อง |
 
 ---
 
-# Rate Limit
-
-```
-30 requests / minute / IP
-```
-
-เมื่อเกินกำหนด API จะตอบกลับ
-
-```
-HTTP 429 Too Many Requests
-```
-
-พร้อม Header
-
-```
-Retry-After: 30
-```
-
----
-
-# Project Information
-
-| Item     | Value            |
-| -------- | ---------------- |
-| Version  | 1.0.0            |
-| Runtime  | Cloudflare Pages |
-| Protocol | HTTP / HTTPS     |
-| Response | JSON             |
-| Methods  | GET, POST        |
-| License  | Free to use      |
-
----
-
-## Powered by Cytech Team
-
-Made with ❤️ by **p.namnarak**
-
-Version **1.0.0** • 2026
+*Powered by Cytech Team | Version 2.0.0*
