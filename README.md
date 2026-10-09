@@ -1,4 +1,18 @@
-# TrueMoney Angpao API (v2.0.0)
+<!-- CYTECH_README_REFRESH:START -->
+<div align="center">
+
+<a href="https://github.com/Namnarak/Truemoney-Angpao"><img width="100%" alt="TrueMoney Angpao API banner" src="https://capsule-render.vercel.app/api?type=waving&color=0:1A1136,100:F59E0B&height=210&section=header&text=TrueMoney%20Angpao%20API&fontSize=43&fontColor=ffffff&fontAlignY=36&desc=A%20Cloudflare-powered%20Thai%20voucher%20API&descAlignY=59&descSize=16"></a>
+
+<img alt="PROJECT: API Service" src="https://img.shields.io/badge/PROJECT-API%20Service-F59E0B?style=flat-square&labelColor=1A1136"> <img alt="STACK: Cloudflare Workers" src="https://img.shields.io/badge/STACK-Cloudflare%20Workers-F59E0B?style=flat-square&labelColor=1A1136">
+
+<p><strong>A Cloudflare-powered Thai voucher API</strong></p>
+
+<a href="https://github.com/Namnarak/Truemoney-Angpao/releases">Releases</a> · <a href="https://github.com/Namnarak/Truemoney-Angpao/issues">Issues</a> · <a href="https://github.com/Namnarak/Truemoney-Angpao">Source</a>
+
+</div>
+<!-- CYTECH_README_REFRESH:END -->
+
+---
 
 API สำหรับรับเงินจากลิงก์ซองของขวัญ TrueMoney (อั่งเปา) ได้โดยตรง ทำงานแบบเรียลไทม์ และไม่ต้องล็อกอิน (ใช้ Cloudflare Workers เป็นตัวกลาง)
 
