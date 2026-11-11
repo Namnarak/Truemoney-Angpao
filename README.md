@@ -1,95 +1,142 @@
-<!-- CYTECH_README_REFRESH:START -->
 <div align="center">
 
-<a href="https://github.com/Namnarak/Truemoney-Angpao"><img width="100%" alt="TrueMoney Angpao API banner" src="https://capsule-render.vercel.app/api?type=waving&color=0:1A1136,100:F59E0B&height=210&section=header&text=TrueMoney%20Angpao%20API&fontSize=43&fontColor=ffffff&fontAlignY=36&desc=A%20Cloudflare-powered%20Thai%20voucher%20API&descAlignY=59&descSize=16"></a>
+# TrueMoney Angpao API
 
-<img alt="PROJECT: API Service" src="https://img.shields.io/badge/PROJECT-API%20Service-F59E0B?style=flat-square&labelColor=1A1136"> <img alt="STACK: Cloudflare Workers" src="https://img.shields.io/badge/STACK-Cloudflare%20Workers-F59E0B?style=flat-square&labelColor=1A1136">
+**Open-source API for TrueMoney Gift Voucher claims**
 
-<p><strong>A Cloudflare-powered Thai voucher API</strong></p>
+Self-host it, run it in Docker, or deploy the Cloudflare Pages Worker. You choose the infrastructure.
 
-<a href="https://github.com/Namnarak/Truemoney-Angpao/releases">Releases</a> · <a href="https://github.com/Namnarak/Truemoney-Angpao/issues">Issues</a> · <a href="https://github.com/Namnarak/Truemoney-Angpao">Source</a>
+[Releases](https://github.com/Namnarak/Truemoney-Angpao/releases) · [Issues](https://github.com/Namnarak/Truemoney-Angpao/issues) · [API Docs](#api)
 
 </div>
-<!-- CYTECH_README_REFRESH:END -->
 
 ---
 
-API สำหรับรับเงินจากลิงก์ซองของขวัญ TrueMoney (อั่งเปา) ได้โดยตรง ทำงานแบบเรียลไทม์ และไม่ต้องล็อกอิน (ใช้ Cloudflare Workers เป็นตัวกลาง)
+## Overview
 
-## คุณสมบัติ
-- **เวอร์ชัน**: 2.0.0
-- **การเชื่อมต่อ**: รองรับทั้ง `GET` และ `POST`
-- **อัตราการใช้งาน**: 30 Requests / นาที (Rate Limited)
-- **การป้อนข้อมูล**: รหัสซอง (`voucher_id`) รองรับทั้งรหัสสั้นๆ (เช่น `abc123xyz`) หรือจะส่งเป็นลิงก์เต็มมาก็ได้เลย
+API สำหรับรับเงินจากลิงก์ซองของขวัญ TrueMoney (อั่งเปา) โดยผู้ใช้งานเลือกโครงสร้างพื้นฐานเองได้ โปรเจกต์นี้ไม่ต้องพึ่ง Server, Domain, API key หรือบัญชี Cloudflare ของผู้พัฒนา
 
----
+### Deployment options
 
-## 🔹 1. GET Method
-เหมาะสำหรับการเรียกใช้งานง่ายๆ ผ่าน URL โดยตรง (เช่น ทำผ่านเว็บบราวเซอร์ หรือบอท Discord)
+| วิธีติดตั้ง | Runtime | Transport |
+|---|---|---|
+| Docker / Docker Compose | Python + FastAPI | \`curl-cffi\` (Chrome TLS) พร้อม \`urllib\` fallback |
+| VPS / Dedicated / Local | Python + FastAPI | \`curl-cffi\` (Chrome TLS) พร้อม \`urllib\` fallback |
+| Cloudflare Pages | Cloudflare Worker | Native \`fetch()\` |
 
-**Endpoint:**
-```http
-GET https://tmn-angpao.pages.dev/api/{phone}/{voucher_id}
-```
+ทั้งสองแบบให้ API contract เดียวกัน (\`GET /api/{phone}/{voucher_id}\`, \`POST /api\`) แต่เป็น deployment แยกกัน ผู้ใช้เลือกได้ว่าจะใช้แบบไหน
 
-**พารามิเตอร์:**
-- `phone`: เบอร์โทรศัพท์ 10 หลักของผู้รับเงิน (เช่น `0812345678`)
-- `voucher_id`: รหัสซองของขวัญ หรือลิงก์เต็มก็ได้
+## Quick start: Docker
 
-**ตัวอย่าง (GET):**
-```bash
-curl -X GET "https://tmn-angpao.pages.dev/api/0812345678/abc123xyz"
-```
+ต้องมี Docker Engine และ Docker Compose Plugin
 
----
+\`\`\`bash
+git clone https://github.com/Namnarak/Truemoney-Angpao.git
+cd Truemoney-Angpao
+cp .env.example .env
+docker compose up -d --build
+\`\`\`
 
-## 🔸 2. POST Method
-เหมาะสำหรับการเชื่อมต่อที่ปลอดภัยและเป็นระบบมากกว่า ส่งข้อมูลผ่าน JSON Body
+API จะอยู่ที่ \`http://localhost:8000\`
 
-**Endpoint:**
-```http
-POST https://tmn-angpao.pages.dev/api
-```
+- Health: \`http://localhost:8000/health\`
+- Interactive API docs: \`http://localhost:8000/docs\`
+- Logs: \`docker compose logs -f\`
 
-**Request Headers:**
-- `Content-Type: application/json` (จำเป็น)
-- `Accept: application/json` (แนะนำ)
+## Quick start: Python
 
-**Request Body (JSON):**
-```json
+ต้องใช้ Python 3.10 ขึ้นไป
+
+\`\`\`bash
+git clone https://github.com/Namnarak/Truemoney-Angpao.git
+cd Truemoney-Angpao
+python -m venv .venv
+# Linux / macOS
+source .venv/bin/activate
+# Windows PowerShell: .venv\Scripts\Activate.ps1
+python -m pip install -r requirements.txt
+uvicorn app.main:app --host 0.0.0.0 --port 8000
+\`\`\`
+
+## Configuration
+
+คัดลอก \`.env.example\` เป็น \`.env\` แล้วปรับค่าตามต้องการ
+
+| Variable | Default | Description |
+|---|---:|---|
+| \`PORT\` | \`8000\` | Host port เมื่อใช้ Compose |
+| \`TM_TRANSPORT\` | \`auto\` | \`auto\`, \`curl_cffi\` หรือ \`urllib\` |
+| \`TM_CURL_IMPERSONATE\` | \`chrome\` | Browser profile ที่ curl-cffi ใช้ |
+| \`TM_TIMEOUT\` | \`20\` | Upstream timeout (seconds) |
+| \`TM_RATE_LIMIT\` | \`30\` | Requests per client ต่อช่วงเวลา |
+| \`TM_RATE_WINDOW\` | \`60\` | Rate-limit window (seconds) |
+| \`LOG_LEVEL\` | \`INFO\` | Python logging level |
+
+\`auto\` จะเลือก curl-cffi ก่อน และใช้ urllib เมื่อไม่มี curl-cffi ติดตั้งอยู่ การเปลี่ยน transport ไม่ได้ทำให้ upstream ยอมรับทุก request หรือรับประกันว่าจะผ่านระบบป้องกันของ TrueMoney
+
+## Cloudflare Pages deployment
+
+ใช้บัญชี Cloudflare ของคุณเอง:
+
+1. ติดตั้ง Node.js และ Wrangler: \`npm install -g wrangler\`
+2. Login: \`wrangler login\`
+3. จาก root ของ repository สั่ง \`wrangler pages deploy .\`
+4. เลือก project ของคุณเองเมื่อ Wrangler ถาม
+
+Cloudflare Worker ใช้ Native Fetch ตามข้อจำกัดของ Workers runtime; \`curl-cffi\` ใช้ได้เฉพาะ Python runtime เท่านั้น ไม่ต้องตั้งค่า secret ของผู้พัฒนา
+
+## API
+
+### POST /api
+
+\`\`\`bash
+curl -X POST http://localhost:8000/api \\
+  -H 'Content-Type: application/json' \\
+  -H 'Accept: application/json' \\
+  -d '{"phone":"0812345678","voucher_id":"abc123xyz"}'
+\`\`\`
+
+Request body:
+
+\`\`\`json
 {
   "phone": "0812345678",
   "voucher_id": "abc123xyz"
 }
-```
+\`\`\`
 
-**ตัวอย่าง (POST):**
-```bash
-curl -X POST "https://tmn-angpao.pages.dev/api" \
-  -H "Content-Type: application/json" \
-  -d '{"phone":"0812345678","voucher_id":"abc123xyz"}'
-```
+### GET /api/{phone}/{voucher_id}
 
----
+\`\`\`bash
+curl 'http://localhost:8000/api/0812345678/abc123xyz'
+\`\`\`
 
-## 📤 ตัวอย่าง Response
+ส่ง voucher URL แบบเต็มแทน voucher ID ได้เช่นกัน
 
-**✅ สำเร็จ (200 OK)**
-```json
+### Health check
+
+\`\`\`bash
+curl http://localhost:8000/health
+\`\`\`
+
+### Success response
+
+\`\`\`json
 {
   "success": true,
   "status": 200,
   "message": "รับเงินสำเร็จ",
   "code": "SUCCESS",
   "data": {
-    "name": "นาย ทดสอบ ***",
+    "name": "ผู้ส่ง",
     "amount": "10.00"
   }
 }
-```
+\`\`\`
 
-**❌ ผิดพลาด (ตัวอย่าง 400 Bad Request)**
-```json
+### Error response
+
+\`\`\`json
 {
   "success": false,
   "status": 400,
@@ -97,46 +144,18 @@ curl -X POST "https://tmn-angpao.pages.dev/api" \
   "code": "VOUCHER_EXPIRED",
   "data": null
 }
-```
+\`\`\`
 
----
+## Important operational notes
 
-## ⚠️ ตาราง Error Codes
+- Claim requests เป็นการทำธุรกรรมจริง ตรวจสอบเบอร์โทรและ voucher ให้ถูกต้องก่อนส่ง
+- **ไม่มี automatic retry** เมื่อ timeout หรือ connection หลุด เพราะ upstream อาจรับคำขอไปแล้วและผลลัพธ์ยังไม่ชัดเจน API จะคืน \`CLAIM_OUTCOME_UNKNOWN\`; ตรวจสอบสถานะก่อนลองใหม่
+- Rate limit ของ Python deployment เป็น in-memory ต่อ process เหมาะกับ single instance; หาก scale หลาย replicas ให้ใส่ reverse proxy / shared rate limiter ของคุณเอง
+- ใช้ HTTPS และตั้ง rate limiting / access controls ที่ edge หากเปิด API สู่สาธารณะ
+- อย่า commit ไฟล์ \`.env\` หรือ credentials
+- \`curl-cffi\` เป็น transport compatibility option ไม่ใช่การรับประกันการ bypass anti-bot หรือข้อจำกัดของ upstream
+- การใช้งานขึ้นอยู่กับ availability, policy และเงื่อนไขของ TrueMoney
 
-| HTTP Status | Code | ข้อความ |
-| :--- | :--- | :--- |
-| **200** | `SUCCESS` | รับเงินสำเร็จ ✅ |
-| **400** | `VOUCHER_EXPIRED` | ลิงค์ซองของขวัญหมดอายุ |
-| **400** | `VOUCHER_ALREADY_USED` | ลิงค์ซองของขวัญถูกใช้งานแล้ว |
-| **400** | `SELF_CLAIM_NOT_ALLOWED` | ไม่สามารถใช้อั่งเปาของตัวเองได้ |
-| **400** | `TARGET_USER_REDEEMED` | เป้าหมายรับซองไปแล้ว / หรือไม่ใช่ผู้รับที่กำหนด |
-| **400** | `INVALID_PHONE_OR_USED` | เบอร์รับเงินนี้ไม่ถูกต้อง หรือรับเงินไปแล้ว |
-| **400** | `INVALID_PHONE` | เบอร์รับเงินไม่ถูกต้อง (ต้อง 10 หลัก) |
-| **400** | `INVALID_VOUCHER` | กรุณาระบุลิงค์ซองของขวัญ |
-| **400** | `MISSING_PARAMETER` | กรุณาระบุ phone และ voucher_id |
-| **404** | `VOUCHER_NOT_FOUND` | ไม่พบลิงค์ซองของขวัญ |
-| **429** | `RATE_LIMITED` | ยิงคำขอเร็วเกินไป กรุณารอสักครู่ (Retry-After: 30) |
-| **500** | `INTERNAL_SERVER_ERROR`| เกิดข้อผิดพลาดภายในเซิร์ฟเวอร์ |
-| **500** | `EXTERNAL_SERVER_ERROR`| เซิร์ฟเวอร์ภายนอก (TrueMoney) ขัดข้อง |
+## License
 
----
-
-*Powered by Cytech Team | Version 2.0.0*
-
----
-
-<!-- CYTECH_STAR_HISTORY:START -->
-
-## Star History
-
-<a href="https://github.com/Namnarak/Truemoney-Angpao/stargazers">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/Namnarak/Truemoney-Angpao/refs/heads/main/assets/star-history-dark.svg" />
-    <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/Namnarak/Truemoney-Angpao/refs/heads/main/assets/star-history-light.svg" />
-    <img alt="Star history for Namnarak/Truemoney-Angpao" src="https://raw.githubusercontent.com/Namnarak/Truemoney-Angpao/refs/heads/main/assets/star-history-light.svg" width="1100" />
-  </picture>
-</a>
-
-<sub>Updated automatically from GitHub's dated stargazers. Only currently starred accounts are included.</sub>
-
-<!-- CYTECH_STAR_HISTORY:END -->
+See [LICENSE](LICENSE) if present. Contributions and bug reports are welcome via GitHub Issues.
