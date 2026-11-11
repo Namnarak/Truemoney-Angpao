@@ -151,11 +151,16 @@ curl http://localhost:8000/health
 - Claim requests เป็นการทำธุรกรรมจริง ตรวจสอบเบอร์โทรและ voucher ให้ถูกต้องก่อนส่ง
 - **ไม่มี automatic retry** เมื่อ timeout หรือ connection หลุด เพราะ upstream อาจรับคำขอไปแล้วและผลลัพธ์ยังไม่ชัดเจน API จะคืน \`CLAIM_OUTCOME_UNKNOWN\`; ตรวจสอบสถานะก่อนลองใหม่
 - Rate limit ของ Python deployment เป็น in-memory ต่อ process เหมาะกับ single instance; หาก scale หลาย replicas ให้ใส่ reverse proxy / shared rate limiter ของคุณเอง
+- Cloudflare deployment ควรตั้ง Rate Limiting/WAF rule ใน Cloudflare dashboard ของบัญชีคุณเอง
 - ใช้ HTTPS และตั้ง rate limiting / access controls ที่ edge หากเปิด API สู่สาธารณะ
 - อย่า commit ไฟล์ \`.env\` หรือ credentials
 - \`curl-cffi\` เป็น transport compatibility option ไม่ใช่การรับประกันการ bypass anti-bot หรือข้อจำกัดของ upstream
 - การใช้งานขึ้นอยู่กับ availability, policy และเงื่อนไขของ TrueMoney
 
+## Development
+
+Run the local unit tests with `python -m unittest discover -s tests`. GitHub Actions runs the same test suite on pushes and pull requests.
+
 ## License
 
-See [LICENSE](LICENSE) if present. Contributions and bug reports are welcome via GitHub Issues.
+Contributions and bug reports are welcome via GitHub Issues.
