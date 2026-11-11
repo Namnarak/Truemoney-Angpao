@@ -5,6 +5,7 @@ from typing import Any
 from urllib.parse import quote, unquote, urlparse, parse_qs
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
+from fastapi.middleware.cors import CORSMiddleware
 try:
     from curl_cffi import requests as curl_requests
 except ImportError:
@@ -19,6 +20,7 @@ RATE_WINDOW = int(os.getenv("TM_RATE_WINDOW", "60"))
 logging.basicConfig(level=os.getenv("LOG_LEVEL", "INFO").upper(), format="%(asctime)s %(levelname)s %(name)s %(message)s")
 logger = logging.getLogger("truemoney-angpao")
 app = FastAPI(title="TrueMoney Angpao API", version=APP_VERSION)
+app.add_middleware(CORSMiddleware, allow_origins=os.getenv("CORS_ORIGINS", "*").split(","), allow_methods=["GET", "POST", "OPTIONS"], allow_headers=["Content-Type", "X-Request-ID"], expose_headers=["X-Request-ID"])
 _rate_buckets: dict[str, deque[float]] = defaultdict(deque)
 
 def response(success: bool, status: int, message: str, code: str, data: Any = None, headers: dict[str, str] | None = None) -> JSONResponse:
